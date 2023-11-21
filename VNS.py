@@ -131,35 +131,44 @@ def neighborhood(solution: set, graph, base_density: float, neighborhood_number:
   else:
     return solution, base_density, False
 
-# Get the graph from the specified path
-graph = get_graph(path="data/johnson8-2-4.mtx")
+def vns(graph,epsilon,num_repetitions, neighborhood_x = [2,3,4],solution = None):
+  if solution is None:
+    solution = set('1')
+    density = 1
+  else:
+    density = calc_density(solution,graph)
 
-# Initialize the solution with node '1', density, and epsilon
-solution = set('1')
-density = 1
+  best_solution = set()
 
-best_solution = set()
+  repetitons = {}
+  for i in neighborhood_x:
+    repetitons[i] = num_repetitions
+  while np.sum([i for i in repetitons.values()]):
+    while True:
+      # Update the solution, density, and check if the process should stop
+      solution, density, end = add_node(solution, graph, density=density, epsilon=epsilon)
 
-c = 1000
-for _ in range(100):
-  while True:
-    # Update the solution, density, and check if the process should stop
-    solution, density, end = add_node(solution, graph, density=density, epsilon=0.9)
+      if end:
+        break
 
-    if end:
+    if len(solution) > len(best_solution):
+      best_solution = solution.copy()
+      for i in neighborhood_x:
+        repetitons[i] = num_repetitions
+
+    if len(solution) == len(graph.keys()):
       break
 
-  if len(solution) > len(best_solution):
-    best_solution = solution.copy()
+    print(len(best_solution))
+    for key,num_r in repetitons.items():
+      if num_r > 0:
+        solution, density, change = neighborhood(solution,graph,base_density = density,neighborhood_number = 5,epsilon=epsilon)
+        repetitons[key] = num_r -1
+        break
 
-  print(solution)
-  change = False
-  c = 1000
-  while change == False and c > 0:
-    solution, density, change = neighborhood(solution,graph,base_density = density,neighborhood_number = 2,epsilon=0.9)
-    c -= 1
+  density = calc_density(best_solution,graph)
 
-density = calc_density(best_solution,graph)
-# Print the final solution, density, and end status
-print("Final Solution:", best_solution)
-print("Final Density:", density)
+  # Print the final solution, density, and end status
+  print("Final Solution:", best_solution)
+  print("Final Density:", density)
+  return best_solution,density
