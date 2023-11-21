@@ -1,7 +1,10 @@
+import time
+
 from auxiliar import get_graph
 import numpy as np
+import time
 
-def add_node(solution, graph, density, epsilon):
+def add_node(solution, graph, density, epsilon,neighbors):
   """
   Add a node to the solution based on the graph, density, and epsilon.
 
@@ -17,20 +20,21 @@ def add_node(solution, graph, density, epsilon):
   - end (bool): True if the process should stop, False otherwise.
   """
 
-  neighbors = {}
-  solution_size = len(solution)
+  if neighbors is None:
+    neighbors = {}
 
+    # Count the edges between solution nodes and their neighbors
+    for node in solution:
+      for neighbor in graph[node]:
+        if neighbor not in solution:
+          x = neighbors.setdefault(neighbor, 0)
+          neighbors[neighbor] = x + 1
+
+  solution_size = len(solution)
   num_edges = density * ((solution_size - 1) * solution_size) / 2
 
-  # Count the edges between solution nodes and their neighbors
-  for node in solution:
-    for neighbor in graph[node]:
-      if neighbor not in solution:
-        x = neighbors.setdefault(neighbor, 0)
-        neighbors[neighbor] = x + 1
-
   if len(neighbors.values()) == 0:
-    return solution, density, True
+    return solution, density, True, neighbors
 
   max_node = None
   max_add_edges = 0
@@ -47,11 +51,18 @@ def add_node(solution, graph, density, epsilon):
 
   # Check if the new density falls below the threshold
   if new_density < epsilon:
-    return solution, density, True
+    return solution, density, True, neighbors
 
   solution.add(max_node)
 
-  return solution, new_density, False
+  neighbors.pop(max_node)
+
+  for neighbor in graph[max_node]:
+    if neighbor not in solution:
+      x = neighbors.setdefault(neighbor, 0)
+      neighbors[neighbor] = x + 1
+
+  return solution, new_density, False, neighbors
 
 def calc_density(solution: set, graph: dict) -> float:
   """
@@ -132,6 +143,7 @@ def neighborhood(solution: set, graph, base_density: float, neighborhood_number:
     return solution, base_density, False
 
 def vns(graph,epsilon,num_repetitions, neighborhood_x = [2,3,4],solution = None):
+
   if solution is None:
     solution = set('1')
     density = 1
@@ -143,11 +155,12 @@ def vns(graph,epsilon,num_repetitions, neighborhood_x = [2,3,4],solution = None)
   repetitons = {}
   for i in neighborhood_x:
     repetitons[i] = num_repetitions
+
   while np.sum([i for i in repetitons.values()]):
+    neighbors = None
     while True:
       # Update the solution, density, and check if the process should stop
-      solution, density, end = add_node(solution, graph, density=density, epsilon=epsilon)
-
+      solution, density, end,neighbors = add_node(solution, graph, density=density, epsilon=epsilon, neighbors = neighbors)
       if end:
         break
 
@@ -158,8 +171,6 @@ def vns(graph,epsilon,num_repetitions, neighborhood_x = [2,3,4],solution = None)
 
     if len(solution) == len(graph.keys()):
       break
-
-    print(len(best_solution))
     for key,num_r in repetitons.items():
       if num_r > 0:
         solution, density, change = neighborhood(solution,graph,base_density = density,neighborhood_number = 5,epsilon=epsilon)
@@ -168,7 +179,4 @@ def vns(graph,epsilon,num_repetitions, neighborhood_x = [2,3,4],solution = None)
 
   density = calc_density(best_solution,graph)
 
-  # Print the final solution, density, and end status
-  print("Final Solution:", best_solution)
-  print("Final Density:", density)
   return best_solution,density
