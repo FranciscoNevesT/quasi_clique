@@ -151,6 +151,7 @@ def vns(graph,epsilon,num_repetitions, neighborhood_x = [2,3,4],solution = None)
     density = calc_density(solution,graph)
 
   best_solution = set()
+  best_density = 0
 
   repetitons = {}
   for i in neighborhood_x:
@@ -166,6 +167,12 @@ def vns(graph,epsilon,num_repetitions, neighborhood_x = [2,3,4],solution = None)
 
     if len(solution) > len(best_solution):
       best_solution = solution.copy()
+      best_density = density
+      for i in neighborhood_x:
+        repetitons[i] = num_repetitions
+    elif len(solution) == len(best_solution) and best_density < density:
+      best_solution = solution.copy()
+      best_density = density
       for i in neighborhood_x:
         repetitons[i] = num_repetitions
 
