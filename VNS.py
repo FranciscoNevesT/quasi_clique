@@ -178,10 +178,16 @@ def vns(graph,epsilon,num_repetitions, neighborhood_x = [2,3,4],solution = None)
 
     if len(solution) == len(graph.keys()):
       break
+
     for key,num_r in repetitons.items():
+      change = False
       if num_r > 0:
-        solution, density, change = neighborhood(solution,graph,base_density = density,neighborhood_number = 5,epsilon=epsilon)
-        repetitons[key] = num_r -1
+        while repetitons[key] > 0:
+          solution, density, change = neighborhood(solution,graph,base_density = density,neighborhood_number = 5,epsilon=epsilon)
+          repetitons[key] = repetitons[key] -1
+          if change:
+            break
+      if change:
         break
 
   density = calc_density(best_solution,graph)

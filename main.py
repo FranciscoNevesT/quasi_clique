@@ -5,9 +5,9 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 num_sample = 5
-epsilon = 0.80
+epsilon = 0.8
 neighborhood_x = [2,3,4]
-num_repetitions = 100
+num_repetitions = 1000
 
 data = []
 for path in os.listdir("data"):
